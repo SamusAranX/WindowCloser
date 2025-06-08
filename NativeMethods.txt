@@ -1,4 +1,5 @@
 EnumWindows
+FindWindow
 GetWindowText
 GetWindowTextLength
 GetWindowThreadProcessId
@@ -6,3 +7,4 @@ GetClassName
 IsWindowVisible
 PostMessage
 WM_CLOSE
+HRESULT_FROM_WIN32

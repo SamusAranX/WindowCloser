@@ -39,5 +39,4 @@ msbuild.wrn
 # nuget packages folder
 packages/
 
-# auto-generated version file
-version.txt
+appsettings*.json

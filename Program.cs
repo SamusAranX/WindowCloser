@@ -1,4 +1,4 @@
-using dieCloud;
+using WindowCloser;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddHostedService<Worker>();

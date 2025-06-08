@@ -4,8 +4,9 @@
     <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>dotnet-dieCloud-816736dc-0a5e-4919-908c-8d254da390f3</UserSecretsId>
+    <UserSecretsId>dotnet-WindowCloser-816736dc-0a5e-4919-908c-8d254da390f3</UserSecretsId>
     <SupportedOSPlatformVersion>10.0.18362.0</SupportedOSPlatformVersion>
+    <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,74 +1,60 @@
-using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Windows.Win32;
 using Windows.Win32.Foundation;
 
-namespace dieCloud {
+namespace WindowCloser {
 	public class Worker(ILogger<Worker> logger) : BackgroundService {
 		private readonly ILogger<Worker> _logger = logger;
 
-		private const string PROCESS_NAME = "iCloudHome";
-		private const string WINDOW_TITLE = "iCloud";
-		private const string WINDOW_CLASS = "WinUIDesktopWin32WindowClass";
-
-		/// <summary>
-		/// Takes a window handle and runs GetWindowThreadProcessId on it.
-		/// </summary>
-		/// <param name="handle">The window handle.</param>
-		/// <returns>A tuple consisting of (Process ID, Thread ID).</returns>
-		private static unsafe (uint, uint) GetWindowThreadProcessId(HWND handle) {
-			uint processID = 0;
-			var threadID = PInvoke.GetWindowThreadProcessId(handle, &processID);
-			return (processID, threadID);
+		private void LogSuccess(WindowInfo windowInfo) {
+			this._logger.LogInformation("Closed window for \"{FancyName}\"!", windowInfo.FancyName);
 		}
 
-		private void ListWindows() {
-			var allProcesses = Process.GetProcesses();
-			var _ = PInvoke.EnumWindows((handle, _) => {
-				if (!PInvoke.IsWindowVisible(handle))
-					return true;
+		private void LogLastError(WindowInfo windowInfo) {
+			var lastError = Marshal.GetLastWin32Error();
+			var lastErrorString = $"0x{lastError:08X}";
+			var lastErrorMessage = WindowUtils.GetErrorMessageForWin32Code(lastError);
+			this._logger.LogError("Error while closing window for \"{FancyName}\": {ErrorMessage} ({LastError})", windowInfo.FancyName, lastErrorMessage, lastErrorString);
+		}
 
-				var (processID, _) = GetWindowThreadProcessId(handle);
-				var proc = allProcesses.FirstOrDefault(p => p.Id == processID);
-
-				if (proc == null || proc.ProcessName != PROCESS_NAME)
-					return true;
-
-				var processName = proc.ProcessName;
-
-				Span<char> windowTitleSpan = stackalloc char[256];
-				PInvoke.GetWindowText(handle, windowTitleSpan);
-
-				Span<char> classNameSpan = stackalloc char[256];
-				PInvoke.GetClassName(handle, classNameSpan);
-
-				var windowTitle = windowTitleSpan.ToString().TrimEnd('\0');
-				var className = classNameSpan.ToString().TrimEnd('\0');
-
-				if (windowTitle == WINDOW_TITLE && className == WINDOW_CLASS) {
-					this._logger.LogInformation("Found iCloud Window! ({ProcessID}) {ProcessName}", processID, processName);
-					if (PInvoke.PostMessage(handle, PInvoke.WM_CLOSE, 0, 0)) {
-						this._logger.LogInformation("Closed iCloud Window!");
-					} else {
-						var lastError = Marshal.GetLastWin32Error();
-						var lastErrorString = $"0x{lastError:08X}";
-						this._logger.LogError("Error while closing window: {LastError}", lastErrorString);
+		private void DoThing(List<WindowInfo> windowInfos) {
+			foreach (var info in windowInfos) {
+				if (info.Multiple) {
+					foreach (var windowHandle in WindowUtils.FindManyWindows(info)) {
+						if (WindowUtils.CloseWindow(windowHandle))
+							this.LogSuccess(info);
+						else
+							this.LogLastError(info);
 					}
-					return false;
+				} else {
+					if (WindowUtils.FindOneWindow(info) is HWND windowHandle) {
+						if (WindowUtils.CloseWindow(windowHandle))
+							this.LogSuccess(info);
+						else
+							this.LogLastError(info);
+					}
 				}
-
-				return true;
-			},
-			new LPARAM(0));
+			}
 		}
 
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
+			var builder = new ConfigurationBuilder();
+			builder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+			var config = builder.Build();
+
+			var settings = new Settings();
+			config.Bind(settings);
+
+			this._logger.LogInformation("Config: {DebugView}", config.GetDebugView());
+			this._logger.LogInformation("Interval: {Interval}", settings.Interval);
+			this._logger.LogInformation("Windows: {Windows}", settings.Windows);
+
+			var delay = (int)Math.Round(settings.Interval * 1000);
 			while (!stoppingToken.IsCancellationRequested) {
 				if (this._logger.IsEnabled(LogLevel.Information)) {
 					this._logger.LogInformation("Worker running at: {Time}", DateTimeOffset.Now);
-					this.ListWindows();
+					this.DoThing(settings.Windows);
 				}
-				await Task.Delay(1000, stoppingToken);
+				await Task.Delay(delay, stoppingToken);
 			}
 		}
 	}
