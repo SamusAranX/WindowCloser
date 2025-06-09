@@ -5,18 +5,27 @@ namespace WindowCloser {
 	internal sealed class ServiceUtils {
 		private const int WAIT_FOR_EXIT = 5000;
 
+		public const string APP_DESCRIPTION = "Periodically closes windows based on configurable conditions.";
+
 		private static readonly string APP_NAME = $"{Introspect.AppName}";
 		private static readonly string APP_PATH = $"{Introspect.AppPath}";
 		private static readonly string SERVICE_NAME = $"{APP_NAME}Service";
 
+		// TODO: interactive services are verboten according to microsoft. see if this still works without type=interact
 		private static readonly string[] INSTALL_ARGS = [
 			"create",
 			$"{SERVICE_NAME}",
 			$"binpath=\"{APP_PATH}\" run-service",
-			$"displayname=\"{APP_NAME}\"",
+			$"displayname={APP_NAME}",
 			$"type=interact",
 			$"type=own",
 			$"start=auto",
+		];
+
+		private static readonly string[] DESCRIPTION_ARGS = [
+			"description",
+			$"{SERVICE_NAME}",
+			$"{APP_DESCRIPTION}",
 		];
 
 		private static readonly string[] UNINSTALL_ARGS = [
@@ -66,14 +75,16 @@ namespace WindowCloser {
 			if (!Environment.UserInteractive)
 				return;
 
-			var pluralS = (start || stop) ? "s" : "";
-			var message = $"This will try to run the following command{pluralS} with elevated privileges:";
+			var pluralS = (start || stop || args == INSTALL_ARGS) ? "s" : "";
+			var message = $"This will try to run the following command{pluralS} with elevated privileges.\nYou may see multiple UAC prompts.";
 			var index = 0;
 
 			if (stop)
 				message += $"\n{++index}) sc.exe {string.Join(" ", STOP_ARGS)}";
 
 			message += $"\n{++index}) sc.exe {string.Join(" ", args)}";
+			if (args == INSTALL_ARGS)
+				message += $"\n{++index}) sc.exe {string.Join(" ", DESCRIPTION_ARGS)}";
 
 			if (start)
 				message += $"\n{++index}) sc.exe {string.Join(" ", START_ARGS)}";
@@ -84,8 +95,11 @@ namespace WindowCloser {
 		}
 
 		public static void InstallService(bool startNow) {
-			PrintArgsMessage(INSTALL_ARGS, start: true);
+			PrintArgsMessage(INSTALL_ARGS, start: startNow);
 			if (!ServiceControl(INSTALL_ARGS))
+				return;
+
+			if (!ServiceControl(DESCRIPTION_ARGS))
 				return;
 
 			if (startNow)

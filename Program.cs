@@ -40,7 +40,7 @@ var runServiceCommand = new Command("run-service", "Runs the service worker. (Th
 runServiceCommand.SetHandler(() => RunWorker(args));
 
 var root = new RootCommand {
-	Description = "A service that periodically closes windows based on configurable conditions."
+	Description = ServiceUtils.APP_DESCRIPTION
 };
 root.SetHandler(() => root.Invoke("-h"));
 
