@@ -7,8 +7,6 @@ namespace WindowCloser {
 		private readonly IOptionsMonitor<Settings> _settings = settings;
 		private readonly ILogger<Worker> _logger = logger;
 
-		private DateTime lastOnChangeEvent = DateTime.UtcNow;
-
 		private void LogSuccess(WindowInfo windowInfo) {
 			this._logger.LogInformation("Closed window for \"{FancyName}\"!", windowInfo.FancyName);
 		}
@@ -41,15 +39,6 @@ namespace WindowCloser {
 		}
 
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-			this._settings.OnChange((changedSettings, name) => {
-				// ignore this onchange event if it occurred less than a second after the last one
-				if ((DateTime.UtcNow - this.lastOnChangeEvent).TotalSeconds < 1)
-					return;
-
-				this._logger.LogDebug("OnChange: \"{Name}\"", name);
-				this.lastOnChangeEvent = DateTime.UtcNow;
-			});
-
 			while (!stoppingToken.IsCancellationRequested) {
 				var settings = this._settings.CurrentValue;
 
