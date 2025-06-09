@@ -1,9 +1,13 @@
+using Microsoft.Extensions.Options;
 using System.Runtime.InteropServices;
 using Windows.Win32.Foundation;
 
 namespace WindowCloser {
-	public class Worker(ILogger<Worker> logger) : BackgroundService {
+	public class Worker(IOptionsMonitor<Settings> settings, ILogger<Worker> logger) : BackgroundService {
+		private readonly IOptionsMonitor<Settings> _settings = settings;
 		private readonly ILogger<Worker> _logger = logger;
+
+		private DateTime lastOnChangeEvent = DateTime.UtcNow;
 
 		private void LogSuccess(WindowInfo windowInfo) {
 			this._logger.LogInformation("Closed window for \"{FancyName}\"!", windowInfo.FancyName);
@@ -37,24 +41,29 @@ namespace WindowCloser {
 		}
 
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-			var builder = new ConfigurationBuilder();
-			builder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-			var config = builder.Build();
+			this._settings.OnChange((changedSettings, name) => {
+				// ignore this onchange event if it occurred less than a second after the last one
+				if ((DateTime.UtcNow - this.lastOnChangeEvent).TotalSeconds < 1)
+					return;
 
-			var settings = new Settings();
-			config.Bind(settings);
+				this._logger.LogDebug("OnChange: \"{Name}\"", name);
+				this.lastOnChangeEvent = DateTime.UtcNow;
+			});
 
-			this._logger.LogInformation("Config: {DebugView}", config.GetDebugView());
-			this._logger.LogInformation("Interval: {Interval}", settings.Interval);
-			this._logger.LogInformation("Windows: {Windows}", settings.Windows);
-
-			var delay = (int)Math.Round(settings.Interval * 1000);
 			while (!stoppingToken.IsCancellationRequested) {
-				if (this._logger.IsEnabled(LogLevel.Information)) {
-					this._logger.LogInformation("Worker running at: {Time}", DateTimeOffset.Now);
+				var settings = this._settings.CurrentValue;
+
+				try {
+					this._logger.LogInformation("Doing Thing at {Time}", DateTimeOffset.Now);
 					this.DoThing(settings.Windows);
+
+					var delay = (int)Math.Round(Math.Max(1, settings.Interval)) * 1000;
+					this._logger.LogDebug("Waiting {Interval}s…", delay);
+					await Task.Delay(delay, stoppingToken);
+				} catch (TaskCanceledException) {
+					Console.WriteLine("exception");
 				}
-				await Task.Delay(delay, stoppingToken);
+				
 			}
 		}
 	}

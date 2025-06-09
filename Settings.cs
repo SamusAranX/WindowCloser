@@ -1,10 +1,10 @@
 ﻿namespace WindowCloser {
-	internal class Settings {
-		public double Interval { get; set; } = 1.5;
+	public sealed class Settings {
+		public double Interval { get; set; } = 1;
 		public List<WindowInfo> Windows { get; set; } = [];
 	}
 
-	internal class WindowInfo {
+	public sealed class WindowInfo {
 		public string? Title { get; set; }
 		public string? Class { get; set; }
 		public string? Process { get; set; }

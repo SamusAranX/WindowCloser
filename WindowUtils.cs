@@ -4,7 +4,7 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 
 namespace WindowCloser {
-	internal class WindowUtils {
+	internal sealed class WindowUtils {
 		/// <summary>
 		/// Takes a window handle and runs GetWindowThreadProcessId on it.
 		/// </summary>

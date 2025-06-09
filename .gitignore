@@ -22,6 +22,7 @@ nupkg/
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
+[Pp]ublish/
 x64/
 x86/
 build/
@@ -39,4 +40,5 @@ msbuild.wrn
 # nuget packages folder
 packages/
 
-appsettings*.json
+appsettings.json
+appsettings.Development.json
