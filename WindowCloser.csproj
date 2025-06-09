@@ -13,10 +13,12 @@
 
   <ItemGroup>
     <Content Remove="appsettings.Example.json" />
+    <Content Remove="publish\appsettings.json" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="appsettings.Example.json" />
+    <None Include="publish\appsettings.json" />
   </ItemGroup>
 
   <ItemGroup>
