@@ -5,18 +5,6 @@ using WindowCloser;
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 Console.OutputEncoding = Encoding.UTF8;
 
-static void RunWorker(string[] args) {
-	var builder = Host.CreateApplicationBuilder(args);
-	builder
-		.Configuration
-		.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-	builder.Services.Configure<Settings>(builder.Configuration.GetSection("Settings"));
-	builder.Services.AddHostedService<Worker>();
-
-	var host = builder.Build();
-	host.Run();
-}
-
 var startNowOption = new Option<bool>(
 	"--start-now",
 	description: "Starts the service after installing it.",
@@ -40,7 +28,7 @@ var runServiceCommand = new Command("run-service", "Runs the service worker. (Th
 runServiceCommand.SetHandler(() => RunWorker(args));
 
 var root = new RootCommand {
-	Description = ServiceUtils.APP_DESCRIPTION
+	Description = ServiceUtils.APP_DESCRIPTION,
 };
 root.SetHandler(() => root.Invoke("-h"));
 
@@ -51,3 +39,16 @@ root.Add(stopCommand);
 root.Add(runServiceCommand);
 
 return root.Invoke(args);
+
+static void RunWorker(string[] args) {
+	var appSettingsPath = Path.Join(AppContext.BaseDirectory, "appsettings.json");
+	var builder = Host.CreateApplicationBuilder(args);
+	builder
+		.Configuration
+		.AddJsonFile(appSettingsPath, optional: false, reloadOnChange: true);
+	builder.Services.Configure<Settings>(builder.Configuration.GetSection("Settings"));
+	builder.Services.AddHostedService<Worker>();
+
+	var host = builder.Build();
+	host.Run();
+}
