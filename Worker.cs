@@ -1,34 +1,66 @@
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Options;
-using System.Runtime.InteropServices;
 using Windows.Win32.Foundation;
 
 namespace WindowCloser;
 
 public class Worker(IOptionsMonitor<Settings> settingsMonitor, ILogger<Worker> logger) : BackgroundService {
-	private void LogSuccess(WindowInfo windowInfo) {
-		logger.LogInformation("Closed window for \"{FancyName}\"!", windowInfo.FancyName);
-	}
-
-	private void LogLastError(WindowInfo windowInfo) {
-		var lastError = Marshal.GetLastWin32Error();
-		var lastErrorString = $"0x{lastError:08X}";
-		var lastErrorMessage = WindowUtils.GetErrorMessageForWin32Code(lastError);
-		logger.LogError("Error while closing window for \"{FancyName}\": {ErrorMessage} ({LastError})", windowInfo.FancyName, lastErrorMessage, lastErrorString);
-	}
+	private readonly ConcurrentDictionary<(uint processID, uint threadID, HWND windowHandle), Task> _windowClosingTasks = [];
 
 	private void DoThing(List<WindowInfo> windowInfos) {
+		var settings = settingsMonitor.CurrentValue;
+		var closeTimeout = (int)Math.Round(Math.Max(0, settings.CloseTimeout)) * 1000;
+		var killWait = (int)Math.Round(Math.Max(0, settings.KillWait)) * 1000;
+
 		foreach (var info in windowInfos) {
 			List<HWND> handles = [];
+
 			if (info.Multiple)
 				handles.AddRange(WindowUtils.FindManyWindows(info));
 			else if (WindowUtils.FindOneWindow(info) is HWND handle)
 				handles.Add(handle);
 
+			logger.LogDebug("Found {Num} handles for \"{FancyName}\"", handles.Count, info.FancyName);
+
+			// task time
 			foreach (var handle in handles) {
-				if (WindowUtils.CloseWindow(handle))
-					this.LogSuccess(info);
-				else
-					this.LogLastError(info);
+				if (!WindowUtils.GetWindowThreadProcessId(handle, out var ids)) {
+					logger.LogError("Hiccup while processing window for \"{FancyName}\": Invalid window handle {Handle}", info.FancyName, handle);
+					continue;
+				}
+
+				var dictKey = (ids.processID, ids.threadID, handle);
+				if (this._windowClosingTasks.ContainsKey(dictKey)) {
+					logger.LogDebug("Found existing Task for \"{FancyName}\", {DictKey}", info.FancyName, dictKey);
+					continue; // window is already being worked on
+				}
+
+				var task = new Task(() => {
+					logger.LogDebug("Started Task for \"{FancyName}\", {DictKey}", info.FancyName, dictKey);
+
+					try {
+						WindowUtils.CloseWindowEx(handle, closeTimeout, killWait, logger);
+						logger.LogInformation("Closed window for \"{FancyName}\"!", info.FancyName);
+					} catch (CloseWindowException e) {
+						logger.LogError("Error closing window for \"{FancyName}\": {Message}", info.FancyName, e.Message);
+					}
+
+					if (this._windowClosingTasks.TryRemove(dictKey, out _)) {
+						logger.LogDebug("Removed task entry for \"{FancyName}\", {DictKey}", info.FancyName, dictKey);
+						return;
+					}
+
+					logger.LogCritical("Couldn't remove task entry for \"{FancyName}\", {DictKey}", info.FancyName, dictKey);
+					throw new InvalidOperationException("critical program error");
+				});
+
+				if (!this._windowClosingTasks.TryAdd(dictKey, task)) {
+					logger.LogCritical("Couldn't add task entry for \"{FancyName}\", {DictKey}", info.FancyName, dictKey);
+					throw new InvalidOperationException("critical program error");
+				}
+
+				logger.LogDebug("Added task entry for \"{FancyName}\", {DictKey}", info.FancyName, dictKey);
+				task.Start();
 			}
 		}
 	}

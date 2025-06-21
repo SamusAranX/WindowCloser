@@ -2,6 +2,8 @@
 
 public sealed class Settings {
 	public double Interval { get; set; } = 1;
+	public double CloseTimeout { get; set; } = 3;
+	public double KillWait { get; set; } = 5;
 	public List<WindowInfo> Windows { get; set; } = [];
 }
 

@@ -40,5 +40,5 @@ msbuild.wrn
 # nuget packages folder
 packages/
 
-appsettings.json
-appsettings.Development.json
+appsettings*.json
+!appsettings.Example.json
