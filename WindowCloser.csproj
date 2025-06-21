@@ -10,8 +10,8 @@
     <OutputType>exe</OutputType>
     <PublishSingleFile Condition="'$(Configuration)' == 'Release'">true</PublishSingleFile>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
-    <PublishTrimmed>True</PublishTrimmed>
-    <PublishAot>True</PublishAot>
+    <PublishTrimmed>False</PublishTrimmed>
+    <PublishAot>False</PublishAot>
     <NeutralLanguage>en-US</NeutralLanguage>
     <AssemblyVersion>0.2</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>

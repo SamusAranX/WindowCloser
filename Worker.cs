@@ -20,8 +20,6 @@ public class Worker(IOptionsMonitor<Settings> settingsMonitor, ILogger<Worker> l
 			else if (WindowUtils.FindOneWindow(info) is HWND handle)
 				handles.Add(handle);
 
-			logger.LogDebug("Found {Num} handles for \"{FancyName}\"", handles.Count, info.FancyName);
-
 			// task time
 			foreach (var handle in handles) {
 				if (!WindowUtils.GetWindowThreadProcessId(handle, out var ids)) {
