@@ -1,7 +1,7 @@
 ﻿namespace WindowCloser;
 
 [Serializable]
-public class CloseWindowException: Exception {
+public class CloseWindowException : Exception {
 	public CloseWindowException() { }
 
 	public CloseWindowException(string message) : base(message) { }

@@ -96,7 +96,7 @@ internal sealed class ServiceUtils {
 	}
 
 	public static void InstallService(bool startNow) {
-		PrintArgsMessage(INSTALL_ARGS, start: startNow);
+		PrintArgsMessage(INSTALL_ARGS, startNow);
 		if (!ServiceControl(INSTALL_ARGS))
 			return;
 

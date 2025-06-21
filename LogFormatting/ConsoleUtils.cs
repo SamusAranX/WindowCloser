@@ -9,9 +9,8 @@ internal static class ConsoleUtils {
 		get {
 			// The flag starts at -1.  If it's no longer -1, it's 0 or 1 to represent false or true.
 			var emitAnsiColorCodes = _sEmitAnsiColorCodes;
-			if (emitAnsiColorCodes != -1) {
+			if (emitAnsiColorCodes != -1)
 				return Convert.ToBoolean(emitAnsiColorCodes);
-			}
 
 			// We've not yet computed whether to emit codes or not.  Do so now.  We may race with
 			// other threads, and that's ok; this is idempotent unless someone is currently changing

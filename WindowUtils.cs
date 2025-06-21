@@ -14,7 +14,7 @@ internal sealed class WindowUtils {
 	/// </summary>
 	/// <param name="handle">The window handle.</param>
 	/// <param name="ids">A tuple consisting of (Process ID, Thread ID).</param>
-	/// <returns>True if <see cref="ids"/> contains valid values.</returns>
+	/// <returns>True if <see cref="ids" /> contains valid values.</returns>
 	public static unsafe bool GetWindowThreadProcessId(HWND handle, out (uint processID, uint threadID) ids) {
 		uint processID = 0;
 		ids.threadID = PInvoke.GetWindowThreadProcessId(handle, &processID);
@@ -115,8 +115,8 @@ internal sealed class WindowUtils {
 	}
 
 	/// <summary>
-	/// Tries to close a window, then waits for <see cref="closeTimeout"/> milliseconds.
-	/// If the window still exists but is unresponsive, kills the process and waits for up to <see cref="killWait"/> milliseconds for it to exit fully.
+	/// Tries to close a window, then waits for <see cref="closeTimeout" /> milliseconds.
+	/// If the window still exists but is unresponsive, kills the process and waits for up to <see cref="killWait" /> milliseconds for it to exit fully.
 	/// </summary>
 	/// <param name="windowHandle">The window to close.</param>
 	/// <param name="closeTimeout">How long to wait for the window to close, in milliseconds. Set to zero to return immediately.</param>
@@ -133,7 +133,7 @@ internal sealed class WindowUtils {
 		logger.LogTrace("Sending WM_SYSCOMMAND/SC_CLOSE…");
 
 		// ask target window to close and wait <timeout> milliseconds
-		var success = SendMessageTimeout(windowHandle, PInvoke.WM_SYSCOMMAND, wParam: PInvoke.SC_CLOSE, timeout: (uint)closeTimeout);
+		var success = SendMessageTimeout(windowHandle, PInvoke.WM_SYSCOMMAND, PInvoke.SC_CLOSE, timeout: (uint)closeTimeout);
 		if (!success) {
 			logger.LogTrace("Failed!");
 			var lastError = Marshal.GetLastWin32Error();
@@ -187,11 +187,12 @@ internal sealed class WindowUtils {
 			logger.LogTrace("Killing process {ProcessName}", process.ProcessName);
 			process.Kill();
 			process.WaitForExit(killWait);
-		} catch (Exception e)  {
+		} catch (Exception e) {
 			throw new CloseWindowException($"Process with ID {oldIDs.processID} couldn't be killed", e);
 		}
 
 		logger.LogTrace("Killed process {ProcessName}", process.ProcessName);
+
 		// if we made it this far, the process should be dead
 	}
 }

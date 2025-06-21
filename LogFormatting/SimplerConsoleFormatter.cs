@@ -20,13 +20,9 @@ internal sealed class SimplerConsoleFormatter : ConsoleFormatter, IDisposable {
 	}
 
 	[MemberNotNull(nameof(FormatterOptions))]
-	private void ReloadLoggerOptions(SimplerConsoleFormatterOptions options) {
-		this.FormatterOptions = options;
-	}
+	private void ReloadLoggerOptions(SimplerConsoleFormatterOptions options) { this.FormatterOptions = options; }
 
-	public void Dispose() {
-		this._optionsReloadToken?.Dispose();
-	}
+	public void Dispose() { this._optionsReloadToken?.Dispose(); }
 
 	internal SimplerConsoleFormatterOptions FormatterOptions { get; set; }
 
@@ -51,13 +47,11 @@ internal sealed class SimplerConsoleFormatter : ConsoleFormatter, IDisposable {
 
 		string? timestamp = null;
 		var timestampFormat = this.FormatterOptions.TimestampFormat;
-		if (timestampFormat != null) {
+		if (timestampFormat != null)
 			timestamp = stamp.ToString(timestampFormat, CultureInfo.InvariantCulture);
-		}
 
-		if (timestamp != null) {
+		if (timestamp != null)
 			textWriter.Write(timestamp);
-		}
 
 		textWriter.WriteColoredMessage(logLevelString, logLevelColors.Background, logLevelColors.Foreground);
 
@@ -82,9 +76,8 @@ internal sealed class SimplerConsoleFormatter : ConsoleFormatter, IDisposable {
 
 			textWriter.Write(']');
 
-			if (!singleLine) {
+			if (!singleLine)
 				textWriter.Write(Environment.NewLine);
-			}
 		}
 
 		// scope information
@@ -99,10 +92,10 @@ internal sealed class SimplerConsoleFormatter : ConsoleFormatter, IDisposable {
 			WriteMessage(textWriter, exception, singleLine);
 		}
 
-		if (singleLine) {
+		if (singleLine)
 			textWriter.Write(Environment.NewLine);
-		}
 	}
+
 	private static void WriteReplacing(TextWriter writer, string oldValue, string newValue, string message) {
 		var newMessage = message.Replace(oldValue, newValue);
 		writer.Write(newMessage);
@@ -120,7 +113,6 @@ internal sealed class SimplerConsoleFormatter : ConsoleFormatter, IDisposable {
 			WriteReplacing(textWriter, Environment.NewLine, NEW_LINE_WITH_MESSAGE_PADDING, message);
 			textWriter.Write(Environment.NewLine);
 		}
-
 	}
 
 	private DateTimeOffset GetCurrentDateTime() {
@@ -147,9 +139,8 @@ internal sealed class SimplerConsoleFormatter : ConsoleFormatter, IDisposable {
 		// We shouldn't be outputting color codes for Android/Apple mobile platforms,
 		// they have no shell (adb shell is not meant for running apps) and all the output gets redirected to some log file.
 		var disableColors = this.FormatterOptions.ColorBehavior == LoggerColorBehavior.Disabled || (this.FormatterOptions.ColorBehavior == LoggerColorBehavior.Default && !ConsoleUtils.EmitAnsiColorCodes);
-		if (disableColors) {
+		if (disableColors)
 			return new ConsoleColors(null, null);
-		}
 
 		// We must explicitly set the background color if we are setting the foreground color,
 		// since just setting one can look bad on the users console.
@@ -174,16 +165,14 @@ internal sealed class SimplerConsoleFormatter : ConsoleFormatter, IDisposable {
 				paddingNeeded = false;
 				state.Write(MESSAGE_PADDING);
 				state.Write("=> ");
-			} else {
+			} else
 				state.Write(" => ");
-			}
 
 			state.Write(scope);
 		}, textWriter);
 
-		if (!paddingNeeded && !singleLine) {
+		if (!paddingNeeded && !singleLine)
 			textWriter.Write(Environment.NewLine);
-		}
 	}
 
 	private readonly struct ConsoleColors(ConsoleColor? foreground, ConsoleColor? background) {

@@ -20,12 +20,12 @@ const string BUILDTIME_STRING = $"Build Time: {Version.BUILD_TIME}";
 
 var startNowOption = new Option<bool>(
 	"--start-now",
-	description: "Starts the service after installing it."
+	"Starts the service after installing it."
 );
 
 var minimizeOption = new Option<bool>(
 	"--minimize",
-	description: "Minimizes the console window after starting, if possible."
+	"Minimizes the console window after starting, if possible."
 );
 minimizeOption.AddAlias("-M");
 
@@ -64,7 +64,7 @@ static void RunWorker(bool minimize) {
 	var builder = Host.CreateApplicationBuilder();
 	builder
 		.Configuration
-		.AddJsonFile(appSettingsPath, optional: false, reloadOnChange: true);
+		.AddJsonFile(appSettingsPath, false, true);
 	builder.Services.Configure<Settings>(builder.Configuration.GetSection("Settings"));
 	builder.Services.Configure<ConsoleLifetimeOptions>(o => o.SuppressStatusMessages = true);
 	builder.Services.AddHostedService<Worker>();

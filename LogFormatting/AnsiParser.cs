@@ -75,9 +75,8 @@ internal sealed class AnsiParser {
 						if (TryGetForegroundColor(escapeCode, isBright, out var color)) {
 							foreground = color;
 							isBright = false;
-						} else if (TryGetBackgroundColor(escapeCode, out color)) {
+						} else if (TryGetBackgroundColor(escapeCode, out color))
 							background = color;
-						}
 
 						i += 4;
 						continue;
@@ -85,14 +84,12 @@ internal sealed class AnsiParser {
 				}
 			}
 
-			if (startIndex == -1) {
+			if (startIndex == -1)
 				startIndex = i;
-			}
 
 			var nextEscapeIndex = -1;
-			if (i < message.Length - 1) {
+			if (i < message.Length - 1)
 				nextEscapeIndex = message.IndexOf(ESCAPE_CHAR, i + 1);
-			}
 
 			if (nextEscapeIndex < 0) {
 				length = message.Length - startIndex;
@@ -103,15 +100,12 @@ internal sealed class AnsiParser {
 			i = nextEscapeIndex - 1;
 		}
 
-		if (startIndex != -1) {
+		if (startIndex != -1)
 			this._onParseWrite(message, startIndex, length, background, foreground);
-		}
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static bool IsDigit(char c) {
-		return (uint)(c - '0') <= '9' - '0';
-	}
+	private static bool IsDigit(char c) { return (uint)(c - '0') <= '9' - '0'; }
 
 	internal const string DEFAULT_FOREGROUND_COLOR = "\e[39m\e[22m"; // reset to default foreground color
 	internal const string DEFAULT_BACKGROUND_COLOR = "\e[49m"; // reset to the background color

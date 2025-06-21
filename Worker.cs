@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
-using Microsoft.Extensions.Options;
 using Windows.Win32.Foundation;
+using Microsoft.Extensions.Options;
 
 namespace WindowCloser;
 
